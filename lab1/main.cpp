@@ -29,10 +29,10 @@ void init( void ) {
 // update
 //================================
 void update( void ) {
-	// do something before rendering...
+  // do something before rendering...
 
-	// rotation angle
-	g_angle = ( g_angle + 5 ) % 360;
+  // rotation angle
+  g_angle = (g_angle + 5) % 360;
 }
 
 //================================
