@@ -85,7 +85,7 @@ void render(void) {
   // modelview matrix
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  glTranslatef(0.0, 0.0, -5.0);
+  glTranslatef(0, 0, -5.0);
   glRotated(g_angle, 1.0, 1.0, 1.0);
   // render objects
   glutSolidTeapot(1.0);
