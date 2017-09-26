@@ -1,3 +1,6 @@
+// custom lib
+#include "ObjLoader-inl.h"
+
 // standard
 #include <cassert>
 #include <cmath>
@@ -6,6 +9,7 @@
 // glut
 #include <GLUT/glut.h>
 
+using namespace ICG;
 //================================
 // global variables
 //================================
@@ -16,6 +20,8 @@ int g_screenHeight = 0;
 // frame index
 int g_frameIndex = 0;
 
+// model id
+GLuint modelID = 0;
 // angle for rotation
 double g_angle = 0;
 constexpr double speed = 1;
@@ -41,58 +47,33 @@ void update(void) {
   }
 }
 
+void drawModel()
+{
+    glPushMatrix();
+    glTranslatef(0,0,-105);
+    glColor3f(1.0,0.23,0.27);
+    glScalef(1,1,1);
+    glRotatef(g_angle,0,1,0);
+    glCallList(modelID);
+    glPopMatrix();
+}
+
 //================================
 // render
 //================================
 void render(void) {
   // clear buffer
   glClearColor(0.0, 0.0, 0.0, 0.0);
-  glClearDepth(1.0);
+  // glClearDepth(1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // render state
   glEnable(GL_DEPTH_TEST);
   glShadeModel(GL_SMOOTH);
 
-  // enable lighting
-  glEnable(GL_LIGHTING);
-  glEnable(GL_LIGHT0);
-
-  // light source attributes
-  GLfloat LightAmbient[] = {0.4f, 0.4f, 0.4f, 1.0f};
-  GLfloat LightDiffuse[] = {0.3f, 0.3f, 0.3f, 1.0f};
-  GLfloat LightSpecular[] = {0.4f, 0.4f, 0.4f, 1.0f};
-  GLfloat LightPosition[] = {5.0f, 5.0f, 5.0f, 1.0f};
-
-  glLightfv(GL_LIGHT0, GL_AMBIENT, LightAmbient);
-  glLightfv(GL_LIGHT0, GL_DIFFUSE, LightDiffuse);
-  glLightfv(GL_LIGHT0, GL_SPECULAR, LightSpecular);
-  glLightfv(GL_LIGHT0, GL_POSITION, LightPosition);
-
-  // surface material attributes
-  GLfloat material_Ka[] = {0.11f, 0.06f, 0.11f, 1.0f};
-  GLfloat material_Kd[] = {0.43f, 0.47f, 0.54f, 1.0f};
-  GLfloat material_Ks[] = {0.33f, 0.33f, 0.52f, 1.0f};
-  GLfloat material_Ke[] = {0.1f, 0.0f, 0.1f, 1.0f};
-  GLfloat material_Se = 10;
-
-  glMaterialfv(GL_FRONT, GL_AMBIENT, material_Ka);
-  glMaterialfv(GL_FRONT, GL_DIFFUSE, material_Kd);
-  glMaterialfv(GL_FRONT, GL_SPECULAR, material_Ks);
-  glMaterialfv(GL_FRONT, GL_EMISSION, material_Ke);
-  glMaterialf(GL_FRONT, GL_SHININESS, material_Se);
-
-  // modelview matrix
-  glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  glTranslatef(0, 0, -5.0);
-  glRotated(g_angle, 1.0, 1.0, 1.0);
   // render objects
-  glutSolidTeapot(1.0);
-
-  // disable lighting
-  glDisable(GL_LIGHT0);
-  glDisable(GL_LIGHTING);
+  drawModel();
 
   // swap back and front buffers
   glutSwapBuffers();
@@ -106,18 +87,14 @@ void keyboard(unsigned char key, int x, int y) {}
 //================================
 // reshape : update viewport and projection matrix when the window is resized
 //================================
-void reshape(int w, int h) {
-  // screen size
-  g_screenWidth = w;
-  g_screenHeight = h;
-
-  // viewport
-  glViewport(0, 0, (GLsizei)w, (GLsizei)h);
-
-  // projection matrix
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(45.0, (GLfloat)w / (GLfloat)h, 1.0, 2000.0);
+void reshape(int w,int h)
+{
+    glViewport(0,0,w,h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective (60, (GLfloat)w / (GLfloat)h, 0.1, 1000.0);
+    //glOrtho(-25,25,-2,2,0.1,100);
+    glMatrixMode(GL_MODELVIEW);
 }
 
 //================================
@@ -140,10 +117,13 @@ void timer(int value) {
 // main
 //================================
 int main(int argc, char **argv) {
+  // init glog
+  google::InitGoogleLogging(argv[0]);
+
   // create opengL window
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-  glutInitWindowSize(600, 600);
+  glutInitWindowSize(800, 600);
   glutInitWindowPosition(100, 100);
   glutCreateWindow(argv[0]);
 
@@ -156,6 +136,8 @@ int main(int argc, char **argv) {
   glutKeyboardFunc(keyboard);
   glutTimerFunc(1000.0 / fps, timer, 0);
 
+  // load objFile
+  modelID = ObjLoader::loadObjFromFile("../files/porsche.obj");
   // main loop
   glutMainLoop();
 
