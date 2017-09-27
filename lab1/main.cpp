@@ -38,18 +38,22 @@ void init(void) {
 void update(void) {
   // do something before rendering...
   xx ++;
-  if (xx > 300) {
+  if (xx > 360) {
     xx = 0;
   }
 }
 
 void drawModel()
 {
+    array<GLdouble, 16> transformationMatrix {
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      static_cast<GLdouble>(xx), 0, -150, 1
+    };
     glPushMatrix();
-    glTranslatef(xx,0,-105);
+    glMultMatrixd(&transformationMatrix[0]);
     glColor3f(1.0,0.23,0.27);
-    glScalef(1,1,1);
-    // glRotatef(g_angle,0,1,0);
     glCallList(modelID);
     glPopMatrix();
 }

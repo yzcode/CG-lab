@@ -64,8 +64,8 @@ public:
         glVertex3f(point[0], point[1], point[2]);
       }
       glEnd();
+      glPopMatrix();
     }
-    glPopMatrix();
     glEndList();
 
     // close file
