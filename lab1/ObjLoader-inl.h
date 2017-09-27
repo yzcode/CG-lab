@@ -14,7 +14,21 @@ using namespace std;
 // constant define
 
 namespace ICG {
+
+namespace color {
+  static constexpr array<GLfloat, 3> green{0.0f, 1.0f, 0.0f};
+  static constexpr array<GLfloat, 3> orange{1.0f, 0.5f, 0.0f};
+  static constexpr array<GLfloat, 3> red{1.0f, 0.0f, 0.0f};
+  static constexpr array<GLfloat, 3> yellow{1.0f, 1.0f, 0.0f};
+  static constexpr array<GLfloat, 3> blue{0.0f, 0.0f, 1.0f};
+  static constexpr array<GLfloat, 3> magenta{1.0f, 0.0f, 1.0f};
+  static constexpr array<GLfloat, 3> purple{1.0f, 0.0f, 1.0f};
+  static constexpr array<GLfloat, 3> gold{1.0f, 0.0f, 0.84f};
+}
+
 class ObjLoader {
+private:
+
 public:
   static GLuint loadObjFromFile(const string &fileName) {
     auto newObjID = glGenLists(1);

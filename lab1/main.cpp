@@ -22,11 +22,9 @@ int g_frameIndex = 0;
 
 // model id
 GLuint modelID = 0;
-// angle for rotation
-double g_angle = 0;
-constexpr double speed = 1;
-constexpr int fps = 72;
-constexpr double rotationOffset = (360 * speed) / fps;
+
+int xx = -100;
+const int fps = 72;
 //================================
 // init
 //================================
@@ -39,21 +37,19 @@ void init(void) {
 //================================
 void update(void) {
   // do something before rendering...
-
-  // rotation angle
-  g_angle = (g_angle + rotationOffset);
-  while (g_angle >= 360) {
-    g_angle -= 360;
+  xx ++;
+  if (xx > 300) {
+    xx = 0;
   }
 }
 
 void drawModel()
 {
     glPushMatrix();
-    glTranslatef(0,0,-105);
+    glTranslatef(xx,0,-105);
     glColor3f(1.0,0.23,0.27);
     glScalef(1,1,1);
-    glRotatef(g_angle,0,1,0);
+    // glRotatef(g_angle,0,1,0);
     glCallList(modelID);
     glPopMatrix();
 }
@@ -64,7 +60,7 @@ void drawModel()
 void render(void) {
   // clear buffer
   glClearColor(0.0, 0.0, 0.0, 0.0);
-  // glClearDepth(1.0);
+  glClearDepth(1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // render state
