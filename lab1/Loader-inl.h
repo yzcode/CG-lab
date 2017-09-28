@@ -26,7 +26,7 @@ namespace color {
   static constexpr array<GLfloat, 3> gold{1.0f, 0.0f, 0.84f};
 }
 
-class ObjLoader {
+class Loader {
 private:
 
 public:

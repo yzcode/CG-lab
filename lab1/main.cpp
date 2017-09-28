@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
   glutTimerFunc(1000.0 / fps, timer, 0);
 
   // load objFile
-  modelID = ObjLoader::loadObjFromFile("../files/porsche.obj");
+  modelID = Loader::loadObjFromFile("../files/porsche.obj");
   // main loop
   glutMainLoop();
 
