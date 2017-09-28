@@ -1,6 +1,6 @@
 // custom lib
 #include "MatrixOp-inl.h"
-#include "ObjLoader-inl.h"
+#include "Loader-inl.h"
 
 // standard
 #include <cassert>
