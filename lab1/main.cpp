@@ -1,6 +1,6 @@
 // custom lib
-#include "ObjLoader-inl.h"
 #include "MatrixOp-inl.h"
+#include "ObjLoader-inl.h"
 
 // standard
 #include <cassert>
@@ -38,34 +38,26 @@ void init(void) {
 //================================
 void update(void) {
   // do something before rendering...
-  xx ++;
+  xx++;
   if (xx > 360) {
     xx = 0;
   }
 }
 
-void drawModel()
-{
+void drawModel() {
   glPushMatrix();
-  array<GLdouble, 16> scalingMatrix {
-    2, 0, 0, 0,
-    0, 2, 0, 0,
-    0, 0, 2, 0,
-    0, 0, 0, 1
-  };
 
-  array<GLdouble, 16> tranlationMatrix {
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, -150, 1
-  };
-  TransMatrix rotationMatrix (EulerAngles{0, static_cast<GLdouble>(xx), 0, false});
-  glMultMatrixd(&tranlationMatrix[0]);
+  TransMatrix scalingMatrix(ScalingVec{0.5, 0.5, 0.5});
+  TransMatrix rotationMatrix(
+      EulerAngles{0, static_cast<GLdouble>(xx), 0, false});
+  TransMatrix tranlationMatrix(TranslationVec{0, 0, -150});
+
+  // unit-matrix * tranlationMatrix * rotationMatrix * scalingMatrix
+  glMultMatrixd(&(tranlationMatrix.mat[0]));
   glMultMatrixd(&(rotationMatrix.mat[0]));
-  glMultMatrixd(&scalingMatrix[0]);
+  glMultMatrixd(&(scalingMatrix.mat[0]));
 
-  glColor3f(1.0,0.23,0.27);
+  glColor3f(1.0, 0.23, 0.27);
   glCallList(modelID);
   glPopMatrix();
 }
@@ -99,14 +91,13 @@ void keyboard(unsigned char key, int x, int y) {}
 //================================
 // reshape : update viewport and projection matrix when the window is resized
 //================================
-void reshape(int w,int h)
-{
-    glViewport(0,0,w,h);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective (60, (GLfloat)w / (GLfloat)h, 0.1, 1000.0);
-    //glOrtho(-25,25,-2,2,0.1,100);
-    glMatrixMode(GL_MODELVIEW);
+void reshape(int w, int h) {
+  glViewport(0, 0, w, h);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluPerspective(60, (GLfloat)w / (GLfloat)h, 0.1, 1000.0);
+  // glOrtho(-25,25,-2,2,0.1,100);
+  glMatrixMode(GL_MODELVIEW);
 }
 
 //================================
