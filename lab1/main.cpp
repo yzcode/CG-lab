@@ -1,5 +1,6 @@
 // custom lib
 #include "ObjLoader-inl.h"
+#include "MatrixOp-inl.h"
 
 // standard
 #include <cassert>
@@ -38,24 +39,35 @@ void init(void) {
 void update(void) {
   // do something before rendering...
   xx ++;
-  if (xx > 360) {
-    xx = 0;
+  if (xx > 100) {
+    xx = -100;
   }
 }
 
 void drawModel()
 {
-    array<GLdouble, 16> transformationMatrix {
-      1, 0, 0, 0,
-      0, 1, 0, 0,
-      0, 0, 1, 0,
-      static_cast<GLdouble>(xx), 0, -150, 1
-    };
-    glPushMatrix();
-    glMultMatrixd(&transformationMatrix[0]);
-    glColor3f(1.0,0.23,0.27);
-    glCallList(modelID);
-    glPopMatrix();
+  glPushMatrix();
+  array<GLdouble, 16> scalingMatrix {
+    2, 0, 0, 0,
+    0, 2, 0, 0,
+    0, 0, 2, 0,
+    0, 0, 0, 1
+  };
+
+  array<GLdouble, 16> tranlationMatrix {
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    static_cast<GLdouble>(xx), 0, -150, 1
+  };
+  TransMatrix rotationMatrix (Quaternion{0, 0, 1, 0});
+  glMultMatrixd(&tranlationMatrix[0]);
+  glMultMatrixd(&(rotationMatrix.mat[0]));
+  // glMultMatrixd(&scalingMatrix[0]);
+
+  glColor3f(1.0,0.23,0.27);
+  glCallList(modelID);
+  glPopMatrix();
 }
 
 //================================
