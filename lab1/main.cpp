@@ -24,7 +24,7 @@ int g_frameIndex = 0;
 // model id
 GLuint modelID = 0;
 
-int xx = -100;
+int xx = 0;
 const int fps = 72;
 //================================
 // init
@@ -39,8 +39,8 @@ void init(void) {
 void update(void) {
   // do something before rendering...
   xx ++;
-  if (xx > 100) {
-    xx = -100;
+  if (xx > 360) {
+    xx = 0;
   }
 }
 
@@ -58,9 +58,9 @@ void drawModel()
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
-    static_cast<GLdouble>(xx), 0, -150, 1
+    0, 0, -150, 1
   };
-  TransMatrix rotationMatrix (Quaternion{0, 0, 1, 0});
+  TransMatrix rotationMatrix (EulerAngles{0, static_cast<GLdouble>(xx), 0, false});
   glMultMatrixd(&tranlationMatrix[0]);
   glMultMatrixd(&(rotationMatrix.mat[0]));
   // glMultMatrixd(&scalingMatrix[0]);
