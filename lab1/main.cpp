@@ -63,7 +63,7 @@ void drawModel()
   TransMatrix rotationMatrix (EulerAngles{0, static_cast<GLdouble>(xx), 0, false});
   glMultMatrixd(&tranlationMatrix[0]);
   glMultMatrixd(&(rotationMatrix.mat[0]));
-  // glMultMatrixd(&scalingMatrix[0]);
+  glMultMatrixd(&scalingMatrix[0]);
 
   glColor3f(1.0,0.23,0.27);
   glCallList(modelID);
