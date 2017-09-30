@@ -1,7 +1,7 @@
 // custom lib
-#include "MatrixOp-inl.h"
 #include "Loader-inl.h"
-
+#include "MatrixOp-inl.h"
+#include "interpolation-inl.h"
 // standard
 #include <cassert>
 #include <cmath>
@@ -21,40 +21,71 @@ int g_screenHeight = 0;
 // frame index
 int g_frameIndex = 0;
 
+// pointer to interpolater
+shared_ptr<BaseInterpolation> interpolater;
 // model id
 GLuint modelID = 0;
+shared_ptr<vector<Frame>> keyFrames;
+shared_ptr<Frame> curFrame;
 
-int xx = 0;
-const int fps = 72;
+double deltaT = 0.01;
+double offsetT = 0;
+int curKeyFrame = 0;
+const int fps = 60;
 //================================
 // init
 //================================
 void init(void) {
-  // init something before main loop...
+  // load objFile
+  modelID = Loader::loadObjFromFile("../files/porsche.obj");
+  // load KeyFrame
+  keyFrames = Loader::loadKeyFramesFromFile("../files/keyframes.in");
+
+  interpolater = make_shared<LineInterpolation>();
+  // generate first Frame
+  curFrame = interpolater->interpolation(
+      keyFrames->at(curKeyFrame), keyFrames->at(curKeyFrame + 1), offsetT);
 }
 
 //================================
 // update
 //================================
 void update(void) {
-  // do something before rendering...
-  xx++;
-  if (xx > 360) {
-    xx = 0;
+  offsetT += deltaT;
+  if (offsetT >= 1) {
+    offsetT = 0;
+    curKeyFrame++;
   }
+  // LOG(ERROR) << curKeyFrame << " " << offsetT;
+  if (curKeyFrame + 1 >= keyFrames->size()) {
+    curKeyFrame = 0;
+    return;
+  }
+  curFrame = interpolater->interpolation(
+      keyFrames->at(curKeyFrame), keyFrames->at(curKeyFrame + 1), offsetT);
+
 }
 
 void drawModel() {
   glPushMatrix();
 
-  TransMatrix scalingMatrix(ScalingVec{0.5, 0.5, 0.5});
-  TransMatrix rotationMatrix(
-      EulerAngles{0, static_cast<GLdouble>(xx), 0, false});
-  TransMatrix tranlationMatrix(TranslationVec{0, 0, -150});
+  shared_ptr<TransMatrix> rotationMatrix;
+  auto &frame = *curFrame;
 
-  // unit-matrix * tranlationMatrix * rotationMatrix * scalingMatrix
+  if (frame.orientationType == ICG_QUATERNION) {
+    rotationMatrix = make_shared<TransMatrix>(
+        *static_pointer_cast<Quaternion>(frame.orientation));
+  } else if (frame.orientationType == ICG_EULER) {
+    rotationMatrix = make_shared<TransMatrix>(
+        *static_pointer_cast<EulerAngles>(frame.orientation));
+  }
+
+  TransMatrix scalingMatrix(*(frame.scalingVec));
+  TransMatrix tranlationMatrix(*(frame.translationVec));
+
+  // unit-matrix * tranlationMatrix * rotationMatrix * scalingMatrix * point
   glMultMatrixd(&(tranlationMatrix.mat[0]));
-  glMultMatrixd(&(rotationMatrix.mat[0]));
+  glMultMatrixd(&(rotationMatrix->mat[0]));
   glMultMatrixd(&(scalingMatrix.mat[0]));
 
   glColor3f(1.0, 0.23, 0.27);
@@ -138,9 +169,6 @@ int main(int argc, char **argv) {
   glutReshapeFunc(reshape);
   glutKeyboardFunc(keyboard);
   glutTimerFunc(1000.0 / fps, timer, 0);
-
-  // load objFile
-  modelID = Loader::loadObjFromFile("../files/porsche.obj");
   // main loop
   glutMainLoop();
 

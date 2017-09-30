@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -13,17 +14,41 @@ const double PI = acos(-1.0);
 
 struct ScalingVec {
   GLdouble x, y, z;
+  ScalingVec(GLdouble xx = 1, GLdouble yy = 1, GLdouble zz = 1)
+      : x(xx), y(yy), z(zz) {}
 };
 
 struct TranslationVec {
   GLdouble x, y, z;
+  TranslationVec(GLdouble xx = 0, GLdouble yy = 0, GLdouble zz = 0)
+      : x(xx), y(yy), z(zz) {}
+
+  vector<GLdouble> getData() { return vector<GLdouble>{x, y, z}; }
 };
 
-struct Quaternion {
+enum OrientationType { ICG_QUATERNION = 0, ICG_EULER };
+
+class Orientation {
+public:
+  virtual vector<GLdouble> getData() { return vector<GLdouble>(); }
+};
+
+class Quaternion : public Orientation {
+public:
   GLdouble w, x, y, z;
+
+  Quaternion(GLdouble w, GLdouble x, GLdouble y, GLdouble z) {
+    double q = sqrt(w * w + x * x + y * y + z * z);
+    w /= q;
+    x /= q;
+    y /= q;
+    z /= q;
+  }
+  virtual vector<GLdouble> getData() { return vector<GLdouble>{w, x, y, z}; }
 };
 
-struct EulerAngles {
+class EulerAngles : public Orientation {
+public:
   GLdouble x, y, z;
   EulerAngles(GLdouble xx, GLdouble yy, GLdouble zz, bool radian = true) {
     x = xx;
@@ -35,11 +60,12 @@ struct EulerAngles {
       z = zz / 360 * 2 * PI;
     }
   }
+  virtual vector<GLdouble> getData() { return vector<GLdouble>{x, y, z}; }
 };
 
 class TransMatrix {
 public:
-  std::array<GLdouble, 16> mat;
+  array<GLdouble, 16> mat;
   TransMatrix(const ScalingVec &sVec) {
     mat.fill(0);
     mat[0] = sVec.x;
@@ -96,6 +122,7 @@ ostream &operator<<(ostream &os, const TransMatrix &tMatrix) {
   return os;
 }
 
+// overload the << for structs
 ostream &operator<<(ostream &os, const Quaternion &quat) {
   os << "(" << quat.w << ", " << quat.x << ", " << quat.y << ", " << quat.z
      << ")";
