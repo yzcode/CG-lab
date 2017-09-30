@@ -26,7 +26,6 @@ public:
       nVec.emplace_back(interValue(aVec[i], bVec[i], deltaT));
     }
     auto interFrame = make_shared<Frame>(nVec);
-
     return interFrame;
   }
 

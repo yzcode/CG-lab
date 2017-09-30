@@ -37,12 +37,12 @@ class Quaternion : public Orientation {
 public:
   GLdouble w, x, y, z;
 
-  Quaternion(GLdouble w, GLdouble x, GLdouble y, GLdouble z) {
-    double q = sqrt(w * w + x * x + y * y + z * z);
-    w /= q;
-    x /= q;
-    y /= q;
-    z /= q;
+  Quaternion(GLdouble ww, GLdouble xx, GLdouble yy, GLdouble zz) {
+    double q = sqrt(ww * ww + xx * xx + yy * yy + zz * zz);
+    w = ww / q;
+    x = xx / q;
+    y = yy / q;
+    z = zz / q;
   }
   virtual vector<GLdouble> getData() { return vector<GLdouble>{w, x, y, z}; }
 };
