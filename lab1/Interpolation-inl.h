@@ -15,7 +15,7 @@ public:
   };
 };
 
-class LineInterpolation : public BaseInterpolation {
+class TwoPointsInterpolation : public BaseInterpolation {
 public:
   virtual shared_ptr<Frame> interpolation(shared_ptr<vector<Frame>> keyframes,
                                           const int &curKeyFrame,
@@ -35,13 +35,19 @@ public:
     return interFrame;
   }
 
-private:
+  virtual GLdouble interValue(GLdouble p0, GLdouble p1, double deltaT) {
+    return p1;
+  }
+};
+
+class LineInterpolation : public TwoPointsInterpolation {
+public:
   GLdouble interValue(GLdouble a, GLdouble b, double deltaT) {
     return (1.0 - deltaT) * a + b * deltaT;
   }
 };
 
-class CatmullRomInterpolation : public BaseInterpolation {
+class FourPointsInterpolation : public BaseInterpolation {
 public:
   virtual shared_ptr<Frame> interpolation(shared_ptr<vector<Frame>> keyframes,
                                           const int &curKeyFrame,
@@ -64,12 +70,29 @@ public:
     return interFrame;
   }
 
-private:
-  GLdouble interValue(GLdouble p0, GLdouble p1, GLdouble p2, GLdouble p3,
-                      double deltaT) {
+  virtual GLdouble interValue(GLdouble p0, GLdouble p1, GLdouble p2,
+                              GLdouble p3, double deltaT) {
+    return p1;
+  }
+};
+
+class CatmullRomInterpolation : public FourPointsInterpolation {
+public:
+  virtual GLdouble interValue(GLdouble p0, GLdouble p1, GLdouble p2,
+                              GLdouble p3, double deltaT) {
     return 0.5 * ((2 * p1) + (-p0 + p2) * deltaT +
                   (2 * p0 - 5 * p1 + 4 * p2 - p3) * deltaT * deltaT +
                   (-p0 + 3 * p1 - 3 * p2 + p3) * deltaT * deltaT * deltaT);
+  }
+};
+
+class BSplineInterpolation : public FourPointsInterpolation {
+public:
+  virtual GLdouble interValue(GLdouble p0, GLdouble p1, GLdouble p2,
+                              GLdouble p3, double deltaT) {
+    return (p0 + 4 * p1 + p2) / 6 - (p0 - p2) / 2 * deltaT +
+           (p0 - 2 * p1 + p2) / 2 * deltaT * deltaT -
+           (p0 - 3 * p1 + 3 * p2 - p3) / 6 * deltaT * deltaT * deltaT;
   }
 };
 

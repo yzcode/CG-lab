@@ -39,7 +39,7 @@ void init(void) {
   // load objFile
   modelID = Loader::loadObjFromFile("../files/porsche.obj");
   // load KeyFrame
-  keyFrames = Loader::loadKeyFramesFromFile("../files/keyframes-q.in");
+  keyFrames = Loader::loadKeyFramesFromFile("../files/keyframes.in");
 
   interpolater = make_shared<CatmullRomInterpolation>();
   // generate first Frame
