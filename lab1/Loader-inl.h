@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 using namespace std;
@@ -17,15 +18,24 @@ using namespace std;
 namespace ICG {
 
 namespace color {
-static constexpr array<GLfloat, 3> green{0.0f, 1.0f, 0.0f};
-static constexpr array<GLfloat, 3> orange{1.0f, 0.5f, 0.0f};
-static constexpr array<GLfloat, 3> red{1.0f, 0.0f, 0.0f};
-static constexpr array<GLfloat, 3> yellow{1.0f, 1.0f, 0.0f};
-static constexpr array<GLfloat, 3> blue{0.0f, 0.0f, 1.0f};
-static constexpr array<GLfloat, 3> magenta{1.0f, 0.0f, 1.0f};
-static constexpr array<GLfloat, 3> purple{1.0f, 0.0f, 1.0f};
-static constexpr array<GLfloat, 3> gold{1.0f, 0.0f, 0.84f};
+static unordered_map<string, array<GLdouble, 3>> colorMap{
+    {"green", array<GLdouble, 3>{0.0f, 1.0f, 0.0f}},
+    {"orange", array<GLdouble, 3>{1.0f, 0.5f, 0.0f}},
+    {"red", array<GLdouble, 3>{1.0f, 0.0f, 0.0f}},
+    {"yellow", array<GLdouble, 3>{1.0f, 1.0f, 0.0f}},
+    {"blue", array<GLdouble, 3>{0.0f, 0.0f, 1.0f}},
+    {"magenta", array<GLdouble, 3>{1.0f, 0.0f, 1.0f}},
+    {"purple", array<GLdouble, 3>{1.0f, 0.0f, 1.0f}},
+    {"gold", array<GLdouble, 3>{1.0f, 0.0f, 0.84f}},
+    {"white", array<GLdouble, 3>{1.0f, 1.0f, 1.0f}},
+    {"black", array<GLdouble, 3>{0.0f, 0.0f, 0.0f}},
+};
 } // namespace color
+
+struct Face {
+  vector<int> vertex;
+  string material;
+};
 
 class Frame {
 public:
@@ -40,7 +50,7 @@ public:
       : orientationType(orientationType), orientation(ori),
         translationVec(tVec), scalingVec(sVec){};
 
-  Frame(const vector<GLdouble>& vec, bool radian = true) {
+  Frame(const vector<GLdouble> &vec, bool radian = true) {
     if (vec.size() == 7) { // input for Quaternion
       orientationType = ICG_QUATERNION;
       orientation = make_shared<Quaternion>(vec[3], vec[4], vec[5], vec[6]);
@@ -50,15 +60,14 @@ public:
     } else {
       LOG(ERROR) << "Unable to parse KeyFrame vec!";
     }
-    translationVec =
-        make_shared<TranslationVec>(vec[0], vec[1], vec[2]);
+    translationVec = make_shared<TranslationVec>(vec[0], vec[1], vec[2]);
 
     scalingVec = make_shared<ScalingVec>();
   }
   Frame() {}
 
   vector<GLdouble> getData() const {
-    vector<GLdouble> ret (translationVec->getData());
+    vector<GLdouble> ret(translationVec->getData());
     auto rVec = orientation->getData();
     ret.insert(ret.end(), rVec.begin(), rVec.end());
     return ret;
@@ -106,8 +115,10 @@ public:
     }
     // input vectors
     vector<array<GLfloat, 3>> points;
+    vector<Face> faces;
     // parser
     string line;
+    string curMaterial = "";
     while (!objFile.eof()) {
       getline(objFile, line);
       istringstream lineStream(line);
@@ -119,6 +130,17 @@ public:
         array<GLfloat, 3> point;
         lineStream >> point[0] >> point[1] >> point[2];
         points.emplace_back(point);
+      } else if (token == "f") {
+        Face newFace {{}, curMaterial};
+        while (lineStream >> token) {
+          istringstream tokenStream(token);
+          int index;
+          tokenStream >> index;
+          newFace.vertex.emplace_back(index - 1);
+        }
+        faces.emplace_back(newFace);
+      } else if (token == "usemtl") {
+        lineStream >> curMaterial;
       }
     }
     // insert points to GL
@@ -126,11 +148,21 @@ public:
     glNewList(newObjID, GL_COMPILE);
     {
       glPushMatrix();
-      glBegin(GL_POINTS);
-      for (const auto &point : points) {
-        glVertex3f(point[0], point[1], point[2]);
+      for (const auto &face : faces) {
+        if (color::colorMap.count(face.material)) {
+          glBegin(GL_POLYGON);
+          const auto& materialColor = color::colorMap[face.material];
+          glColor3d(materialColor[0], materialColor[1], materialColor[2]);
+        } else {
+          glBegin(GL_LINE_LOOP);
+        }
+
+        for (const auto &vertexIndex : face.vertex) {
+          const auto &point = points[vertexIndex];
+          glVertex3f(point[0], point[1], point[2]);
+        }
+        glEnd();
       }
-      glEnd();
       glPopMatrix();
     }
     glEndList();
