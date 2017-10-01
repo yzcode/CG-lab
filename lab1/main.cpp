@@ -30,7 +30,7 @@ shared_ptr<Frame> curFrame;
 
 double deltaT = 0.01;
 double offsetT = 0;
-int curKeyFrame = 0;
+int curKeyFrame = 1;
 const int fps = 60;
 //================================
 // init
@@ -39,12 +39,11 @@ void init(void) {
   // load objFile
   modelID = Loader::loadObjFromFile("../files/porsche.obj");
   // load KeyFrame
-  keyFrames = Loader::loadKeyFramesFromFile("../files/keyframes.in");
+  keyFrames = Loader::loadKeyFramesFromFile("../files/keyframes-q.in");
 
-  interpolater = make_shared<LineInterpolation>();
+  interpolater = make_shared<CatmullRomInterpolation>();
   // generate first Frame
-  curFrame = interpolater->interpolation(
-      keyFrames->at(curKeyFrame), keyFrames->at(curKeyFrame + 1), offsetT);
+  curFrame = interpolater->interpolation(keyFrames, curKeyFrame, offsetT);
 }
 
 //================================
@@ -57,13 +56,11 @@ void update(void) {
     curKeyFrame++;
   }
   // LOG(ERROR) << curKeyFrame << " " << offsetT;
-  if (curKeyFrame + 1 >= keyFrames->size()) {
-    curKeyFrame = 0;
+  if (curKeyFrame + 2 >= keyFrames->size()) {
+    curKeyFrame = 1;
     return;
   }
-  curFrame = interpolater->interpolation(
-      keyFrames->at(curKeyFrame), keyFrames->at(curKeyFrame + 1), offsetT);
-
+  curFrame = interpolater->interpolation(keyFrames, curKeyFrame, offsetT);
 }
 
 void drawModel() {
