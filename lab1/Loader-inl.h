@@ -119,6 +119,7 @@ public:
     // parser
     string line;
     string curMaterial = "";
+
     while (!objFile.eof()) {
       getline(objFile, line);
       istringstream lineStream(line);
@@ -166,7 +167,6 @@ public:
       glPopMatrix();
     }
     glEndList();
-
     // close file
     objFile.close();
     return newObjID;
