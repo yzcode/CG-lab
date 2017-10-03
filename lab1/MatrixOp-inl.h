@@ -111,37 +111,4 @@ public:
   };
 };
 
-// ostream &operator<<(ostream &os, const TransMatrix &tMatrix) {
-//   for (int i = 0; i < 4; ++i) {
-//     os << "| ";
-//     for (int j = 0; j < 4; ++j) {
-//       os << tMatrix.mat[j * 4 + i] << " ";
-//     }
-//     os << "|" << endl;
-//   }
-//   return os;
-// }
-//
-// // overload the << for structs
-// ostream &operator<<(ostream &os, const Quaternion &quat) {
-//   os << "(" << quat.w << ", " << quat.x << ", " << quat.y << ", " << quat.z
-//      << ")";
-//   return os;
-// }
-//
-// ostream &operator<<(ostream &os, const EulerAngles &quat) {
-//   os << "(" << quat.x << ", " << quat.y << ", " << quat.z << ")";
-//   return os;
-// }
-//
-// ostream &operator<<(ostream &os, const ScalingVec &sVec) {
-//   os << "(" << sVec.x << ", " << sVec.y << ", " << sVec.z << ")";
-//   return os;
-// }
-//
-// ostream &operator<<(ostream &os, const TranslationVec &tVec) {
-//   os << "(" << tVec.x << ", " << tVec.y << ", " << tVec.z << ")";
-//   return os;
-// }
-
 } // namespace ICG

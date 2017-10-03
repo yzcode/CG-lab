@@ -1,10 +1,12 @@
 #include "SystemDS.h"
 #include "Loader-inl.h"
+#include "MatrixOp-inl.h"
 
 #include <glog/logging.h>
 #include <iostream>
 
 using namespace std;
+
 namespace ICG {
 // Implementation of CoreCGSystem
 CoreCGSystem::CoreCGSystem() {
@@ -112,4 +114,39 @@ void GLUTSystem::timer(int value) {
   // reset timer
   glutTimerFunc(1000.0 / cgSystem->fps, timer, 0);
 }
+
+// overload << for debug
+ostream &operator<<(ostream &os, const TransMatrix &tMatrix) {
+  for (int i = 0; i < 4; ++i) {
+    os << "| ";
+    for (int j = 0; j < 4; ++j) {
+      os << tMatrix.mat[j * 4 + i] << " ";
+    }
+    os << "|" << endl;
+  }
+  return os;
+}
+
+// overload the << for structs
+ostream &operator<<(ostream &os, const Quaternion &quat) {
+  os << "(" << quat.w << ", " << quat.x << ", " << quat.y << ", " << quat.z
+     << ")";
+  return os;
+}
+
+ostream &operator<<(ostream &os, const EulerAngles &quat) {
+  os << "(" << quat.x << ", " << quat.y << ", " << quat.z << ")";
+  return os;
+}
+
+ostream &operator<<(ostream &os, const ScalingVec &sVec) {
+  os << "(" << sVec.x << ", " << sVec.y << ", " << sVec.z << ")";
+  return os;
+}
+
+ostream &operator<<(ostream &os, const TranslationVec &tVec) {
+  os << "(" << tVec.x << ", " << tVec.y << ", " << tVec.z << ")";
+  return os;
+}
+
 } // namespace ICG
