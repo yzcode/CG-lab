@@ -1,6 +1,9 @@
 #pragma once
 
+#include "Frame-inl.h"
 #include "MatrixOp-inl.h"
+#include "SystemDS.h"
+
 #include <GLUT/glut.h>
 #include <array>
 #include <cassert>
@@ -37,53 +40,17 @@ struct Face {
   string material;
 };
 
-class Frame {
-public:
-  OrientationType orientationType;
-  shared_ptr<Orientation> orientation;
-  shared_ptr<TranslationVec> translationVec;
-  shared_ptr<ScalingVec> scalingVec;
-
-  Frame(OrientationType orientationType, shared_ptr<Orientation> ori,
-        shared_ptr<TranslationVec> tVec,
-        shared_ptr<ScalingVec> sVec = make_shared<ScalingVec>())
-      : orientationType(orientationType), orientation(ori),
-        translationVec(tVec), scalingVec(sVec){};
-
-  Frame(const vector<GLdouble> &vec, bool radian = true) {
-    if (vec.size() == 7) { // input for Quaternion
-      orientationType = ICG_QUATERNION;
-      orientation = make_shared<Quaternion>(vec[3], vec[4], vec[5], vec[6]);
-    } else if (vec.size() == 6) { // input for EulerAngles
-      orientationType = ICG_EULER;
-      orientation = make_shared<EulerAngles>(vec[3], vec[4], vec[5], radian);
-    } else {
-      LOG(ERROR) << "Unable to parse KeyFrame vec!";
-    }
-    translationVec = make_shared<TranslationVec>(vec[0], vec[1], vec[2]);
-
-    scalingVec = make_shared<ScalingVec>();
-  }
-  Frame() {}
-
-  vector<GLdouble> getData() const {
-    vector<GLdouble> ret(translationVec->getData());
-    auto rVec = orientation->getData();
-    ret.insert(ret.end(), rVec.begin(), rVec.end());
-    return ret;
-  }
-};
-
 class Loader {
 public:
-  static shared_ptr<vector<Frame>>
-  loadKeyFramesFromFile(const string &fileName) {
-    auto kFrames = make_shared<vector<Frame>>();
+  static bool loadControlInfoFromFile(const string &fileName,
+                                      shared_ptr<FrameSystem> fSystem) {
+    fSystem->keyFrames = make_shared<vector<Frame>>();
 
     ifstream frameFile(fileName, ios::in | ios::binary);
     // check if opened correctl
     if (not frameFile.is_open()) {
-      LOG(FATAL) << "Cannot open KeyFrame file: " << fileName;
+      LOG(ERROR) << "Cannot open KeyFrame file: " << fileName;
+      return false;
     }
 
     string line;
@@ -94,16 +61,31 @@ public:
       }
 
       istringstream lineStream(line);
-      vector<GLdouble> lineVec;
-      GLdouble token;
-      while (lineStream >> token) {
-        lineVec.emplace_back(token);
+      string token;
+      lineStream >> token;
+      if (token == "dt") {
+        lineStream >> fSystem->deltaT;
+      } else if (token == "interpolater") {
+        lineStream >> token;
+        if (token == "BSPLINE") {
+          fSystem->interpolater = make_shared<BSplineInterpolation>();
+        } else if (token == "CATMULLROM") {
+          fSystem->interpolater = make_shared<CatmullRomInterpolation>();
+        } else {
+          LOG(ERROR) << "Unknow interpolater: " << token;
+        }
+      } else if (token == "kf") {
+        vector<GLdouble> lineVec;
+        GLdouble vertexIndex;
+        while (lineStream >> vertexIndex) {
+          lineVec.emplace_back(vertexIndex);
+        }
+        // insert frame
+        fSystem->keyFrames->emplace_back(Frame{lineVec, false});
       }
-      // insert frame
-      kFrames->emplace_back(Frame{lineVec, false});
     }
 
-    return kFrames;
+    return true;
   }
 
   static GLuint loadObjFromFile(const string &fileName) {

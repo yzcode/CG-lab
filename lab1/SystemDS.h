@@ -1,6 +1,7 @@
 #pragma once
 
 #include "interpolation-inl.h"
+#include "Frame-inl.h"
 
 #include <GLUT/glut.h>
 #include <vector>
@@ -21,19 +22,23 @@ struct FrameSystem {
   int curKeyFrame{1};
   shared_ptr<vector<Frame>> keyFrames;
   shared_ptr<Frame> curFrame;
+  shared_ptr<BaseInterpolation> interpolater;
+  int fps{60};
 };
 
 class CoreCGSystem {
 public:
-  Window window;
-  FrameSystem frameSystem;
-  int fps{60};
+  shared_ptr<Window> window;
+  shared_ptr<FrameSystem> frameSystem;
+
   GLuint modelID{0};
-  shared_ptr<BaseInterpolation> interpolater;
 
-  CoreCGSystem(){};
+  CoreCGSystem(){
+    window = make_shared<Window>();
+    frameSystem = make_shared<FrameSystem>();
+  };
 
-  void loadDataFromFile();
+  void loadDataFromFile(const string& objFile, const string& controlFile);
 };
 
 class GLUTSystem {

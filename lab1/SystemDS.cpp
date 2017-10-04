@@ -9,16 +9,17 @@ using namespace std;
 
 namespace ICG {
 // Implementation of CoreCGSystem
-void CoreCGSystem::loadDataFromFile() {
-  modelID = Loader::loadObjFromFile("../files/porsche.obj");
+void CoreCGSystem::loadDataFromFile(const string &objFile,
+                                    const string &controlFile) {
+  modelID = Loader::loadObjFromFile(objFile);
   // load KeyFrame
-  frameSystem.keyFrames =
-      Loader::loadKeyFramesFromFile("../files/keyframes.in");
+  if (!Loader::loadControlInfoFromFile(controlFile, frameSystem)) {
+    LOG(FATAL) << "Failed to read control file: " << controlFile;
+  }
 
-  interpolater = make_shared<CatmullRomInterpolation>();
   // generate first Frame
-  frameSystem.curFrame = interpolater->interpolation(
-      frameSystem.keyFrames, frameSystem.curKeyFrame, frameSystem.offsetT);
+  frameSystem->curFrame = frameSystem->interpolater->interpolation(
+      frameSystem->keyFrames, frameSystem->curKeyFrame, frameSystem->offsetT);
 }
 
 // Implementation of GLUTSystem
@@ -29,27 +30,28 @@ void GLUTSystem::init(shared_ptr<CoreCGSystem> cgSystemArg) {
 }
 // frameSystem update func
 void GLUTSystem::update(void) {
-  cgSystem->frameSystem.offsetT += cgSystem->frameSystem.deltaT;
-  if (cgSystem->frameSystem.offsetT >= 1) {
-    cgSystem->frameSystem.offsetT = 0;
-    cgSystem->frameSystem.curKeyFrame++;
+  cgSystem->frameSystem->offsetT += cgSystem->frameSystem->deltaT;
+  if (cgSystem->frameSystem->offsetT >= 1) {
+    cgSystem->frameSystem->offsetT = 0;
+    cgSystem->frameSystem->curKeyFrame++;
   }
   // LOG(ERROR) << curKeyFrame << " " << offsetT;
-  if (cgSystem->frameSystem.curKeyFrame + 2 >=
-      cgSystem->frameSystem.keyFrames->size()) {
-    cgSystem->frameSystem.curKeyFrame = 1;
+  if (cgSystem->frameSystem->curKeyFrame + 2 >=
+      cgSystem->frameSystem->keyFrames->size()) {
+    cgSystem->frameSystem->curKeyFrame = 1;
     return;
   }
-  cgSystem->frameSystem.curFrame = cgSystem->interpolater->interpolation(
-      cgSystem->frameSystem.keyFrames, cgSystem->frameSystem.curKeyFrame,
-      cgSystem->frameSystem.offsetT);
+  cgSystem->frameSystem->curFrame =
+      cgSystem->frameSystem->interpolater->interpolation(
+          cgSystem->frameSystem->keyFrames, cgSystem->frameSystem->curKeyFrame,
+          cgSystem->frameSystem->offsetT);
 }
 // draw model func
 void GLUTSystem::drawModel(void) {
   glPushMatrix();
 
   shared_ptr<TransMatrix> rotationMatrix;
-  auto &frame = *(cgSystem->frameSystem.curFrame);
+  auto &frame = *(cgSystem->frameSystem->curFrame);
 
   if (frame.orientationType == ICG_QUATERNION) {
     rotationMatrix = make_shared<TransMatrix>(
@@ -99,13 +101,13 @@ void GLUTSystem::reshape(int w, int h) {
   gluPerspective(60, (GLfloat)w / (GLfloat)h, 0.1, 1000.0);
   // glOrtho(-25,25,-2,2,0.1,100);
   glMatrixMode(GL_MODELVIEW);
-  cgSystem->window.height = h;
-  cgSystem->window.width = w;
+  cgSystem->window->height = h;
+  cgSystem->window->width = w;
 }
 // callback for timer
 void GLUTSystem::timer(int value) {
   // increase frame index
-  cgSystem->frameSystem.frameCounter++;
+  cgSystem->frameSystem->frameCounter++;
 
   update();
 
@@ -113,7 +115,7 @@ void GLUTSystem::timer(int value) {
   glutPostRedisplay();
 
   // reset timer
-  glutTimerFunc(1000.0 / cgSystem->fps, timer, 0);
+  glutTimerFunc(1000.0 / cgSystem->frameSystem->fps, timer, 0);
 }
 
 // overload << for debug
