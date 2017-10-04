@@ -31,7 +31,9 @@ public:
   GLuint modelID{0};
   shared_ptr<BaseInterpolation> interpolater;
 
-  CoreCGSystem();
+  CoreCGSystem(){};
+
+  void loadDataFromFile();
 };
 
 class GLUTSystem {

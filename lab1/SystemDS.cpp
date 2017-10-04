@@ -9,7 +9,7 @@ using namespace std;
 
 namespace ICG {
 // Implementation of CoreCGSystem
-CoreCGSystem::CoreCGSystem() {
+void CoreCGSystem::loadDataFromFile() {
   modelID = Loader::loadObjFromFile("../files/porsche.obj");
   // load KeyFrame
   frameSystem.keyFrames =
@@ -20,6 +20,7 @@ CoreCGSystem::CoreCGSystem() {
   frameSystem.curFrame = interpolater->interpolation(
       frameSystem.keyFrames, frameSystem.curKeyFrame, frameSystem.offsetT);
 }
+
 // Implementation of GLUTSystem
 shared_ptr<CoreCGSystem> GLUTSystem::cgSystem = nullptr;
 

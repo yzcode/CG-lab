@@ -15,15 +15,20 @@ int main(int argc, char **argv) {
   // init glog
   google::InitGoogleLogging(argv[0]);
 
+  // init CoreCGSystem
+  auto cgSystem = make_shared<CoreCGSystem>();
+
   // create opengL window
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-  glutInitWindowSize(800, 600);
-  glutInitWindowPosition(100, 100);
+  glutInitWindowSize(cgSystem->window.width, cgSystem->window.height);
+  glutInitWindowPosition(cgSystem->window.xPosition,
+                         cgSystem->window.yPosition);
   glutCreateWindow(argv[0]);
 
-  // init System
-  auto cgSystem = make_shared<CoreCGSystem>();
+  // load Files
+  cgSystem->loadDataFromFile();
+  // init GLUTSystem
   GLUTSystem::init(cgSystem);
 
   // set callback functions

@@ -132,7 +132,7 @@ public:
         lineStream >> point[0] >> point[1] >> point[2];
         points.emplace_back(point);
       } else if (token == "f") {
-        Face newFace {{}, curMaterial};
+        Face newFace{{}, curMaterial};
         while (lineStream >> token) {
           istringstream tokenStream(token);
           int index;
@@ -152,7 +152,7 @@ public:
       for (const auto &face : faces) {
         if (color::colorMap.count(face.material)) {
           glBegin(GL_POLYGON);
-          const auto& materialColor = color::colorMap[face.material];
+          const auto &materialColor = color::colorMap[face.material];
           glColor3d(materialColor[0], materialColor[1], materialColor[2]);
         } else {
           glBegin(GL_LINE_LOOP);
