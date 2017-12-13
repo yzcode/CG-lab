@@ -1,7 +1,7 @@
 #pragma once
 
-#include "interpolation-inl.h"
 #include "Frame-inl.h"
+#include "interpolation-inl.h"
 
 #include <GLUT/glut.h>
 #include <vector>
@@ -15,15 +15,25 @@ struct Window {
   int yPosition{100};
 };
 
+struct Object {
+  GLuint modelID{0};
+  shared_ptr<Object> parent{nullptr};
+  vector<shared_ptr<Object>> sons;
+  array<double, 3> joint{0, 0, 0};
+  int phase {0};
+
+  shared_ptr<vector<Frame>> keyFrames;
+  shared_ptr<Frame> curFrame;
+  shared_ptr<BaseInterpolation> interpolater;
+};
+
 struct FrameSystem {
   int frameCounter{0};
   double deltaT{0.01};
   double offsetT{0};
-  int curKeyFrame{1};
-  shared_ptr<vector<Frame>> keyFrames;
-  shared_ptr<Frame> curFrame;
-  shared_ptr<BaseInterpolation> interpolater;
+  int curKeyFrame{0};
   int fps{60};
+  vector<shared_ptr<Object>> objects;
 };
 
 class CoreCGSystem {
@@ -31,25 +41,24 @@ public:
   shared_ptr<Window> window;
   shared_ptr<FrameSystem> frameSystem;
 
-  GLuint modelID{0};
-
-  CoreCGSystem(){
+  CoreCGSystem() {
     window = make_shared<Window>();
     frameSystem = make_shared<FrameSystem>();
   };
 
-  void loadDataFromFile(const string& objFile, const string& controlFile);
+  void loadDataFromFile(const string &desFile);
 };
 
 class GLUTSystem {
 private:
   static shared_ptr<CoreCGSystem> cgSystem;
+
 public:
   static void init(shared_ptr<CoreCGSystem> cgSystem);
   // frameSystem update func
   static void update(void);
   // draw model func
-  static void drawModel(void);
+  static void drawModel(shared_ptr<Object> object);
   // callback for dispaly
   static void render(void);
   // callback for keyboard

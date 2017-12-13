@@ -20,12 +20,13 @@ public:
   virtual shared_ptr<Frame> interpolation(shared_ptr<vector<Frame>> keyframes,
                                           const int &curKeyFrame,
                                           double deltaT) {
-    if (curKeyFrame - 1 < 0 || curKeyFrame + 2 >= keyframes->size()) {
-      LOG(FATAL) << "Expect curKeyFrame index between 2 to n - 1: "
-                 << curKeyFrame;
+    int curKeyFrameInx = curKeyFrame % (keyframes->size() - 1);
+    if (curKeyFrameInx < 0 || curKeyFrameInx + 1 >= keyframes->size()) {
+      LOG(FATAL) << "Expect curKeyFrameInx index between 2 to "
+                 << keyframes->size() - 2 << ": " << curKeyFrameInx;
     }
-    auto aVec = keyframes->at(curKeyFrame).getData();
-    auto bVec = keyframes->at(curKeyFrame + 1).getData();
+    auto aVec = keyframes->at(curKeyFrameInx).getData();
+    auto bVec = keyframes->at(curKeyFrameInx + 1).getData();
     vector<GLdouble> nVec;
     // interpolation
     for (int i = 0; i < aVec.size(); ++i) {
@@ -52,14 +53,15 @@ public:
   virtual shared_ptr<Frame> interpolation(shared_ptr<vector<Frame>> keyframes,
                                           const int &curKeyFrame,
                                           double deltaT) {
-    if (curKeyFrame - 1 < 0 || curKeyFrame + 2 >= keyframes->size()) {
-      LOG(FATAL) << "Expect curKeyFrame index between 2 to n - 1: "
-                 << curKeyFrame;
+    int curKeyFrameInx = curKeyFrame % (keyframes->size() - 3) + 1;
+    if (curKeyFrameInx - 1 < 0 || curKeyFrameInx + 2 >= keyframes->size()) {
+      LOG(FATAL) << "Expect curKeyFrameInx index between 2 to "
+                 << keyframes->size() - 3 << ": " << curKeyFrameInx;
     }
-    auto a0Vec = keyframes->at(curKeyFrame - 1).getData();
-    auto aVec = keyframes->at(curKeyFrame).getData();
-    auto bVec = keyframes->at(curKeyFrame + 1).getData();
-    auto b0Vec = keyframes->at(curKeyFrame + 2).getData();
+    auto a0Vec = keyframes->at(curKeyFrameInx - 1).getData();
+    auto aVec = keyframes->at(curKeyFrameInx).getData();
+    auto bVec = keyframes->at(curKeyFrameInx + 1).getData();
+    auto b0Vec = keyframes->at(curKeyFrameInx + 2).getData();
     vector<GLdouble> nVec;
     // interpolation
     for (int i = 0; i < aVec.size(); ++i) {

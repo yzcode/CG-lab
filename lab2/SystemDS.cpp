@@ -9,17 +9,17 @@ using namespace std;
 
 namespace ICG {
 // Implementation of CoreCGSystem
-void CoreCGSystem::loadDataFromFile(const string &objFile,
-                                    const string &controlFile) {
-  modelID = Loader::loadObjFromFile(objFile);
-  // load KeyFrame
-  if (!Loader::loadControlInfoFromFile(controlFile, frameSystem)) {
-    LOG(FATAL) << "Failed to read control file: " << controlFile;
+void CoreCGSystem::loadDataFromFile(const string &desFile) {
+  if (!Loader::loadDesFile(desFile, frameSystem)) {
+    LOG(FATAL) << "Failed to read description file: " << desFile;
   }
 
   // generate first Frame
-  frameSystem->curFrame = frameSystem->interpolater->interpolation(
-      frameSystem->keyFrames, frameSystem->curKeyFrame, frameSystem->offsetT);
+  for (const auto &object : frameSystem->objects) {
+    object->curFrame = object->interpolater->interpolation(
+        object->keyFrames, frameSystem->curKeyFrame + object->phase,
+        frameSystem->offsetT);
+  }
 }
 
 // Implementation of GLUTSystem
@@ -36,22 +36,18 @@ void GLUTSystem::update(void) {
     cgSystem->frameSystem->curKeyFrame++;
   }
   // LOG(ERROR) << curKeyFrame << " " << offsetT;
-  if (cgSystem->frameSystem->curKeyFrame + 2 >=
-      cgSystem->frameSystem->keyFrames->size()) {
-    cgSystem->frameSystem->curKeyFrame = 1;
-    return;
+  for (const auto &object : cgSystem->frameSystem->objects) {
+    object->curFrame = object->interpolater->interpolation(
+        object->keyFrames, cgSystem->frameSystem->curKeyFrame + object->phase,
+        cgSystem->frameSystem->offsetT);
   }
-  cgSystem->frameSystem->curFrame =
-      cgSystem->frameSystem->interpolater->interpolation(
-          cgSystem->frameSystem->keyFrames, cgSystem->frameSystem->curKeyFrame,
-          cgSystem->frameSystem->offsetT);
 }
 // draw model func
-void GLUTSystem::drawModel(void) {
+void GLUTSystem::drawModel(shared_ptr<Object> object) {
   glPushMatrix();
 
   shared_ptr<TransMatrix> rotationMatrix;
-  auto &frame = *(cgSystem->frameSystem->curFrame);
+  auto &frame = *(object->curFrame);
 
   if (frame.orientationType == ICG_QUATERNION) {
     rotationMatrix = make_shared<TransMatrix>(
@@ -64,13 +60,23 @@ void GLUTSystem::drawModel(void) {
   TransMatrix scalingMatrix(*(frame.scalingVec));
   TransMatrix tranlationMatrix(*(frame.translationVec));
 
-  // unit-matrix * tranlationMatrix * rotationMatrix * scalingMatrix * point
+  auto jointVec = TranslationVec(object->joint);
+  TransMatrix jointMatrix(jointVec);
+
+  // jointMatrix * tranlationMatrix * rotationMatrix * scalingMatrix * point
+  glMultMatrixd(&(jointMatrix.mat[0]));
   glMultMatrixd(&(tranlationMatrix.mat[0]));
   glMultMatrixd(&(rotationMatrix->mat[0]));
   glMultMatrixd(&(scalingMatrix.mat[0]));
 
-  glColor3f(1.0, 0.23, 0.27);
-  glCallList(cgSystem->modelID);
+  // glColor3f(1.0, 0.23, 0.27);
+  glCallList(object->modelID);
+  // draw successor by joint
+  if (object->sons.size()) {
+    for (const auto &son : object->sons) {
+      drawModel(son);
+    }
+  }
   glPopMatrix();
 }
 // callback for dispaly
@@ -86,7 +92,11 @@ void GLUTSystem::render(void) {
 
   glLoadIdentity();
   // render objects
-  drawModel();
+  for (const auto &object : cgSystem->frameSystem->objects) {
+    if (object->parent == nullptr) {
+      drawModel(object);
+    }
+  }
 
   // swap back and front buffers
   glutSwapBuffers();

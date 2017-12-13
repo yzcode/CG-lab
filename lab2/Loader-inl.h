@@ -43,8 +43,8 @@ struct Face {
 class Loader {
 public:
   static bool loadControlInfoFromFile(const string &fileName,
-                                      shared_ptr<FrameSystem> fSystem) {
-    fSystem->keyFrames = make_shared<vector<Frame>>();
+                                      shared_ptr<Object> object) {
+    object->keyFrames = make_shared<vector<Frame>>();
 
     ifstream frameFile(fileName, ios::in | ios::binary);
     // check if opened correctl
@@ -63,14 +63,16 @@ public:
       istringstream lineStream(line);
       string token;
       lineStream >> token;
-      if (token == "dt") {
-        lineStream >> fSystem->deltaT;
+      if (token == "#") {
+        continue;
       } else if (token == "interpolater") {
         lineStream >> token;
         if (token == "BSPLINE") {
-          fSystem->interpolater = make_shared<BSplineInterpolation>();
+          object->interpolater = make_shared<BSplineInterpolation>();
         } else if (token == "CATMULLROM") {
-          fSystem->interpolater = make_shared<CatmullRomInterpolation>();
+          object->interpolater = make_shared<CatmullRomInterpolation>();
+        } else if (token == "Linear") {
+          object->interpolater = make_shared<LineInterpolation>();
         } else {
           LOG(ERROR) << "Unknow interpolater: " << token;
         }
@@ -81,10 +83,53 @@ public:
           lineVec.emplace_back(vertexIndex);
         }
         // insert frame
-        fSystem->keyFrames->emplace_back(Frame{lineVec, false});
+        object->keyFrames->emplace_back(Frame{lineVec, false});
       }
     }
 
+    return true;
+  }
+
+  static bool loadDesFile(const string &fileName,
+                          const shared_ptr<FrameSystem> fSystem) {
+    ifstream desFile(fileName, ios::in | ios::binary);
+    // check if opened correctl
+    if (not desFile.is_open()) {
+      LOG(ERROR) << "Cannot open desFrame file: " << fileName;
+      return false;
+    }
+    string line;
+    while (!desFile.eof()) {
+      getline(desFile, line);
+      if (line.size() == 0) {
+        continue;
+      }
+
+      istringstream lineStream(line);
+      string token;
+      lineStream >> token;
+      if (token == "#") {
+        continue;
+      } else if (token == "dt") {
+        lineStream >> fSystem->deltaT;
+      } else if (token == "object") {
+        string objFile, controlFile;
+        int fatherID;
+        shared_ptr<Object> newObj = make_shared<Object>();
+
+        lineStream >> objFile >> controlFile >> fatherID >> newObj->phase;
+
+        newObj->modelID = loadObjFromFile(objFile);
+        loadControlInfoFromFile(controlFile, newObj);
+        fSystem->objects.emplace_back(newObj);
+        if (fatherID != -1) {
+          lineStream >> newObj->joint[0] >> newObj->joint[1] >>
+              newObj->joint[2];
+          newObj->parent = fSystem->objects[fatherID];
+          fSystem->objects[fatherID]->sons.emplace_back(newObj);
+        }
+      }
+    }
     return true;
   }
 
