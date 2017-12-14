@@ -12,8 +12,9 @@ namespace ICG {
 const double Object::g = 9.8;
 const double Object::eps = 1e-3;
 void Object::calFrame() {
-  vector<double> initVec{pos[0], pos[1], pos[2], 0, 0, 0};
-  curFrame = make_shared<Frame>(initVec);
+  vector<double> initVec{pos[0],      pos[1],      pos[2],
+                         rotation[0], rotation[1], rotation[2]};
+  curFrame = make_shared<Frame>(initVec, false);
 };
 
 void Object::boxCheck(double boxSize) {
@@ -54,8 +55,17 @@ void Object::calPos(const double &deltaT, double boxSize) {
     }
     pos[i] += (newV + v[i]) / 2 * deltaT;
     v[i] = newV;
-  }
 
+    rotation[i] += av[i];
+    while (rotation[i] >= 360) rotation[i] -= 360;
+    while (rotation[i] < 0) rotation[i] += 360;
+    if (touchGround) {
+      av[i] = av[i] * friction;
+      if (av[i] <= eps) {
+        av[i] = 0;
+      }
+    }
+  }
   boxCheck(boxSize);
 };
 
@@ -70,7 +80,7 @@ void FrameSystem::collisionCheck() {
   int cnt = objects.size();
   for (int i = 0; i < cnt; ++i) {
     for (int j = i + 1; j < cnt; ++j) {
-      if (distance(objects[i], objects[j]) + 1e-3<=
+      if (distance(objects[i], objects[j]) + 1e-3 <=
           (objects[i]->radius + objects[j]->radius)) {
         LOG(ERROR) << distance(objects[i], objects[j]);
         for (int k = 0; k < 3; ++k) {
@@ -86,6 +96,9 @@ void FrameSystem::collisionCheck() {
           LOG(ERROR) << vi << " " << vj;
           objects[i]->v[k] = vi;
           objects[j]->v[k] = vj;
+
+          objects[i]->av[k] = vi;
+          objects[j]->av[k] = vj;
         }
       }
     }

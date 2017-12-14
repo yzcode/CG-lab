@@ -30,6 +30,8 @@ public:
   double cofRes;
   vec3 v;
   vec3 pos;
+  vec3 av;
+  vec3 rotation;
 
   void calFrame();
   void calPos(const double& deltaT, double boxSize);
