@@ -5,6 +5,7 @@
 using namespace std;
 
 namespace ICG {
+
 class Frame {
 public:
   OrientationType orientationType;
