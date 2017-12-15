@@ -1,13 +1,14 @@
 #pragma once
 
 #include "Frame-inl.h"
-#include "interpolation-inl.h"
 
 #include <GLUT/glut.h>
 #include <vector>
 using namespace std;
 
 namespace ICG {
+typedef array<double, 3> vec3;
+
 struct Window {
   int height{600};
   int width{800};
@@ -15,25 +16,40 @@ struct Window {
   int yPosition{100};
 };
 
-struct Object {
-  GLuint modelID{0};
-  shared_ptr<Object> parent{nullptr};
-  vector<shared_ptr<Object>> sons;
-  array<double, 3> joint{0, 0, 0};
-  int phase {0};
+class Object {
+public:
+  const static double g;
+  const static double eps;
 
-  shared_ptr<vector<Frame>> keyFrames;
+  GLuint modelID{0};
   shared_ptr<Frame> curFrame;
-  shared_ptr<BaseInterpolation> interpolater;
+
+  double radius;
+  double mass;
+  double friction;
+  double cofRes;
+  vec3 v;
+  vec3 pos;
+  vec3 av;
+  vec3 rotation;
+
+  void calFrame();
+  void calPos(const double& deltaT, double boxSize);
+  void boxCheck(double boxSize);
 };
 
-struct FrameSystem {
+class FrameSystem {
+public:
   int frameCounter{0};
   double deltaT{0.01};
   double offsetT{0};
-  int curKeyFrame{0};
-  int fps{60};
+  int fps{120};
+
+  double boxSize;
+  shared_ptr<Object> boxObj;
   vector<shared_ptr<Object>> objects;
+
+  void collisionCheck();
 };
 
 class CoreCGSystem {
@@ -58,7 +74,7 @@ public:
   // frameSystem update func
   static void update(void);
   // draw model func
-  static void drawModel(shared_ptr<Object> object);
+  static void drawModel(shared_ptr<Object> object, bool trans = true);
   // callback for dispaly
   static void render(void);
   // callback for keyboard

@@ -42,54 +42,6 @@ struct Face {
 
 class Loader {
 public:
-  static bool loadControlInfoFromFile(const string &fileName,
-                                      shared_ptr<Object> object) {
-    object->keyFrames = make_shared<vector<Frame>>();
-
-    ifstream frameFile(fileName, ios::in | ios::binary);
-    // check if opened correctl
-    if (not frameFile.is_open()) {
-      LOG(ERROR) << "Cannot open KeyFrame file: " << fileName;
-      return false;
-    }
-
-    string line;
-    while (!frameFile.eof()) {
-      getline(frameFile, line);
-      if (line.size() == 0) {
-        continue;
-      }
-
-      istringstream lineStream(line);
-      string token;
-      lineStream >> token;
-      if (token == "#") {
-        continue;
-      } else if (token == "interpolater") {
-        lineStream >> token;
-        if (token == "BSPLINE") {
-          object->interpolater = make_shared<BSplineInterpolation>();
-        } else if (token == "CATMULLROM") {
-          object->interpolater = make_shared<CatmullRomInterpolation>();
-        } else if (token == "Linear") {
-          object->interpolater = make_shared<LineInterpolation>();
-        } else {
-          LOG(ERROR) << "Unknow interpolater: " << token;
-        }
-      } else if (token == "kf") {
-        vector<GLdouble> lineVec;
-        GLdouble vertexIndex;
-        while (lineStream >> vertexIndex) {
-          lineVec.emplace_back(vertexIndex);
-        }
-        // insert frame
-        object->keyFrames->emplace_back(Frame{lineVec, false});
-      }
-    }
-
-    return true;
-  }
-
   static bool loadDesFile(const string &fileName,
                           const shared_ptr<FrameSystem> fSystem) {
     ifstream desFile(fileName, ios::in | ios::binary);
@@ -112,28 +64,34 @@ public:
         continue;
       } else if (token == "dt") {
         lineStream >> fSystem->deltaT;
+      } else if (token == "box") {
+        lineStream >> fSystem->boxSize;
+        fSystem->boxObj = make_shared<Object>();
+        fSystem->boxObj->pos[0] = -fSystem->boxSize;
+        fSystem->boxObj->pos[1] = -fSystem->boxSize;
+        fSystem->boxObj->pos[2] = -fSystem->boxSize * 2;
+        fSystem->boxObj->calFrame();
+        fSystem->boxObj->modelID =
+            loadObjFromFile("../files/box.obj", fSystem->boxSize*2);
       } else if (token == "object") {
-        string objFile, controlFile;
-        int fatherID;
+        string objFile;
         shared_ptr<Object> newObj = make_shared<Object>();
+        double scalar;
+        // radius filename mass friction cofRes vx vy vz px py pz
+        lineStream >> objFile >> newObj->radius >> scalar >> newObj->mass >>
+            newObj->friction >> newObj->cofRes >> newObj->v[0] >>
+            newObj->v[1] >> newObj->v[2] >> newObj->pos[0] >> newObj->pos[1] >>
+            newObj->pos[2];
 
-        lineStream >> objFile >> controlFile >> fatherID >> newObj->phase;
-
-        newObj->modelID = loadObjFromFile(objFile);
-        loadControlInfoFromFile(controlFile, newObj);
+        newObj->calFrame();
+        newObj->modelID = loadObjFromFile(objFile, scalar);
         fSystem->objects.emplace_back(newObj);
-        if (fatherID != -1) {
-          lineStream >> newObj->joint[0] >> newObj->joint[1] >>
-              newObj->joint[2];
-          newObj->parent = fSystem->objects[fatherID];
-          fSystem->objects[fatherID]->sons.emplace_back(newObj);
-        }
       }
     }
     return true;
   }
 
-  static GLuint loadObjFromFile(const string &fileName) {
+  static GLuint loadObjFromFile(const string &fileName, const double scalar) {
     auto newObjID = glGenLists(1);
     ifstream objFile(fileName, ios::in | ios::binary);
     // check if opened correctl
@@ -157,6 +115,9 @@ public:
       } else if (token == "v") {
         array<GLfloat, 3> point;
         lineStream >> point[0] >> point[1] >> point[2];
+        for (auto &num : point) {
+          num *= scalar;
+        }
         points.emplace_back(point);
       } else if (token == "f") {
         Face newFace{{}, curMaterial};
