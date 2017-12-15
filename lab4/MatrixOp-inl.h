@@ -22,7 +22,8 @@ struct TranslationVec {
   GLdouble x, y, z;
   TranslationVec(GLdouble xx = 0, GLdouble yy = 0, GLdouble zz = 0)
       : x(xx), y(yy), z(zz) {}
-
+  TranslationVec(array<double, 3> arr)
+      : x(arr[0]), y(arr[1]), z(arr[2]) {}
   vector<GLdouble> getData() { return vector<GLdouble>{x, y, z}; }
 };
 

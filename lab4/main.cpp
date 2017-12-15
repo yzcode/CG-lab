@@ -10,9 +10,7 @@
 // glut
 #include <GLUT/glut.h>
 
-DEFINE_string(obj_file, "../files/porsche.obj", "path to the obj File");
-DEFINE_string(control_file, "../files/EULAR_CatmullRom.in",
-              "path to the control File");
+DEFINE_string(des_file, "../files/walker.des", "path to the des File");
 
 using namespace ICG;
 
@@ -33,7 +31,7 @@ int main(int argc, char *argv[]) {
   glutCreateWindow(argv[0]);
 
   // load Files
-  cgSystem->loadDataFromFile(FLAGS_obj_file, FLAGS_control_file);
+  cgSystem->loadDataFromFile(FLAGS_des_file);
   // init GLUTSystem
   GLUTSystem::init(cgSystem);
 
