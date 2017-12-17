@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Frame-inl.h"
 
 #include <GLUT/glut.h>
 #include <vector>
@@ -16,40 +15,16 @@ struct Window {
   int yPosition{100};
 };
 
-class Object {
-public:
-  const static double g;
-  const static double eps;
-
-  GLuint modelID{0};
-  shared_ptr<Frame> curFrame;
-
-  double radius;
-  double mass;
-  double friction;
-  double cofRes;
-  vec3 v;
-  vec3 pos;
-  vec3 av;
-  vec3 rotation;
-
-  void calFrame();
-  void calPos(const double& deltaT, double boxSize);
-  void boxCheck(double boxSize);
-};
-
 class FrameSystem {
 public:
   int frameCounter{0};
-  double deltaT{0.01};
-  double offsetT{0};
-  int fps{120};
+  int fps{20};
 
-  double boxSize;
-  shared_ptr<Object> boxObj;
-  vector<shared_ptr<Object>> objects;
-
-  void collisionCheck();
+  int x;
+  int z;
+  int unit;
+  double height;
+  int t;
 };
 
 class CoreCGSystem {
@@ -74,7 +49,7 @@ public:
   // frameSystem update func
   static void update(void);
   // draw model func
-  static void drawModel(shared_ptr<Object> object, bool trans = true);
+  static void drawModel();
   // callback for dispaly
   static void render(void);
   // callback for keyboard
