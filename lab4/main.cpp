@@ -10,7 +10,7 @@
 // glut
 #include <GLUT/glut.h>
 
-DEFINE_string(des_file, "../files/psys.des", "path to the des File");
+DEFINE_string(des_file, "../files/group.des", "path to the des File");
 
 using namespace ICG;
 

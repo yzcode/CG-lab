@@ -6,6 +6,7 @@
 
 #include <GLUT/glut.h>
 #include <array>
+#include <cstdlib>
 #include <cassert>
 #include <fstream>
 #include <glog/logging.h>
@@ -51,6 +52,7 @@ public:
       return false;
     }
     string line;
+    srand(0);
     while (!desFile.eof()) {
       getline(desFile, line);
       if (line.size() == 0) {
@@ -64,28 +66,53 @@ public:
         continue;
       } else if (token == "dt") {
         lineStream >> fSystem->deltaT;
-      } else if (token == "box") {
-        lineStream >> fSystem->boxSize;
-        fSystem->boxObj = make_shared<Object>();
-        fSystem->boxObj->pos[0] = -fSystem->boxSize;
-        fSystem->boxObj->pos[1] = -fSystem->boxSize;
-        fSystem->boxObj->pos[2] = -fSystem->boxSize * 2;
-        fSystem->boxObj->calFrame();
-        fSystem->boxObj->modelID =
-            loadObjFromFile("../files/box.obj", fSystem->boxSize*2);
       } else if (token == "object") {
-        string objFile;
+        string type;
         shared_ptr<Object> newObj = make_shared<Object>();
+        string objFile;
         double scalar;
-        // radius filename mass friction cofRes vx vy vz px py pz
-        lineStream >> objFile >> newObj->radius >> scalar >> newObj->mass >>
-            newObj->friction >> newObj->cofRes >> newObj->v[0] >>
-            newObj->v[1] >> newObj->v[2] >> newObj->pos[0] >> newObj->pos[1] >>
-            newObj->pos[2];
 
-        newObj->calFrame();
-        newObj->modelID = loadObjFromFile(objFile, scalar);
-        fSystem->objects.emplace_back(newObj);
+        lineStream >> type >> objFile >> newObj->radius >> scalar >>
+            newObj->pos[0] >> newObj->pos[1] >> newObj->pos[2];
+
+        if (type == "barrier") {
+          newObj->type = OBJ_BARRIER;
+        } else if (type == "food") {
+          newObj->type = OBJ_FOOD;
+        } else if (type == "group") {
+          newObj->type = OBJ_GROUP;
+          int number;
+          newObj->forces = make_shared<Forces>();
+
+          lineStream >> number >> newObj->forces->food >>
+              newObj->forces->barrier >> newObj->forces->group >>
+              newObj->forces->repulsion;
+
+          newObj->calFrame();
+          newObj->modelID = loadObjFromFile(objFile, scalar);
+          fSystem->objects.emplace_back(newObj);
+          for (int i = 1; i < number; ++i) {
+            shared_ptr<Object> tObj = make_shared<Object>(*newObj);
+            tObj->forces = make_shared<Forces>(*newObj->forces);
+
+            for (int j = 0; j < 3; ++j) {
+              int sign = 1;
+              if (rand() % 2) {
+                sign = -1;
+              }
+              tObj->pos[j] += i * newObj->radius * sign;
+            }
+            tObj->calFrame();
+            fSystem->objects.emplace_back(tObj);
+          }
+        } else {
+          LOG(FATAL) << "Unknow type for object " << type;
+        }
+        if (type != "group") {
+          newObj->calFrame();
+          newObj->modelID = loadObjFromFile(objFile, scalar);
+          fSystem->objects.emplace_back(newObj);
+        }
       }
     }
     return true;

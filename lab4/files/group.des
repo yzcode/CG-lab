@@ -1,0 +1,7 @@
+dt 0.0166667
+# mass of all object will be set to zero
+# for food and barrier: filename radius scalar px py pz
+object barrier ../files/ball-black.obj 3 3 10 -3 -30
+object food ../files/ball.obj 2 2 -20 -3 -30
+# for group: filename radius scalar px py pz number food-force barrier-force group-force seperate-force
+object group ../files/cube.obj 0.5 0.5 20 -3 -30 30 5 0.5 10 0.1

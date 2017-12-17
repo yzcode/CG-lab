@@ -16,26 +16,36 @@ struct Window {
   int yPosition{100};
 };
 
+enum ObjType {
+    OBJ_BARRIER = 0,
+    OBJ_FOOD,
+    OBJ_GROUP
+};
+
+struct Forces {
+  double food;
+  double barrier;
+  double group;
+  double repulsion;
+};
+
 class Object {
 public:
   const static double g;
-  const static double eps;
 
   GLuint modelID{0};
   shared_ptr<Frame> curFrame;
+  ObjType type;
+  shared_ptr<Forces> forces;
 
   double radius;
-  double mass;
-  double friction;
-  double cofRes;
+  double mass{1};
   vec3 v;
   vec3 pos;
-  vec3 av;
-  vec3 rotation;
+  vec3 force;
 
   void calFrame();
-  void calPos(const double& deltaT, double boxSize);
-  void boxCheck(double boxSize);
+  void calPos(const double& deltaT);
 };
 
 class FrameSystem {
@@ -45,11 +55,9 @@ public:
   double offsetT{0};
   int fps{120};
 
-  double boxSize;
-  shared_ptr<Object> boxObj;
   vector<shared_ptr<Object>> objects;
 
-  void collisionCheck();
+  void calForce();
 };
 
 class CoreCGSystem {
